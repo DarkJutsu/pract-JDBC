@@ -1,7 +1,9 @@
 package samllo.ejemplo.jdbc;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.Properties;
+import java.util.Scanner;
 
 public class Main {
     private static Properties dataBaseProperties() {
@@ -32,15 +34,30 @@ public class Main {
         }
     }
 
+    private static void insertTo(Connection conn, String nombre, String apellido, Date fechaN) {
+        String sql = "INSERT INTO alumno(nombre, apellido, fecha) values(?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nombre);
+            ps.setString(2, apellido);
+            ps.setDate(3, fechaN);
+            int count = ps.executeUpdate();
+            System.out.println("Número de filas actualizada/s: " + count);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) throws SQLException {
 /*      MOSTRAR LOS DRIVERS INSTALADOS
         for (Driver d : DriverManager.drivers().toList()) {
             System.out.println(d.toString());
         }
 */
+        System.out.println("Nacidos antes que el año: ");
+        Scanner input = new Scanner(System.in);
         try (Connection conn = myConnection(dataBaseProperties())) {
-            queryPrep(conn, 2010);
+            insertTo(conn, "Karen", "del Carmen", Date.valueOf("1990-04-11"));
+            queryPrep(conn, input.nextInt());
         }
-
     }
 }
