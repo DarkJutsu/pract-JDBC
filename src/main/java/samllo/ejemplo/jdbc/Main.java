@@ -1,7 +1,6 @@
 package samllo.ejemplo.jdbc;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.Properties;
 import java.util.Scanner;
 
@@ -34,17 +33,29 @@ public class Main {
         }
     }
 
-    private static void insertTo(Connection conn, String nombre, String apellido, Date fechaN) {
+    private static void insertTo(Connection conn) {
+        Alumno[] alumnos = new Alumno[]{
+                new Alumno("Angel", "Lopez", Date.valueOf("1991-02-12")),
+                new Alumno("Kevin", "Gomez", Date.valueOf("1991-02-12")),
+                new Alumno("Pedro", "Martines", Date.valueOf("1991-02-12")),
+                new Alumno("Jose", "Nolasco", Date.valueOf("1991-02-12")),
+        };
         String sql = "INSERT INTO alumno(nombre, apellido, fecha) values(?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, nombre);
-            ps.setString(2, apellido);
-            ps.setDate(3, fechaN);
-            int count = ps.executeUpdate();
-            System.out.println("Número de filas actualizada/s: " + count);
+            int resCount = 0;
+            for (Alumno alum : alumnos) {
+                ps.setString(1, alum.nombre);
+                ps.setString(2, alum.apellido);
+                ps.setDate(3, alum.fechaN);
+                resCount = resCount + ps.executeUpdate();
+            }
+            System.out.println("Número de filas actualizada/s: " + resCount);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private record Alumno(String nombre, String apellido, Date fechaN) {
     }
 
     public static void main(String[] args) throws SQLException {
@@ -56,7 +67,7 @@ public class Main {
         System.out.println("Nacidos antes que el año: ");
         Scanner input = new Scanner(System.in);
         try (Connection conn = myConnection(dataBaseProperties())) {
-            insertTo(conn, "Karen", "del Carmen", Date.valueOf("1990-04-11"));
+            insertTo(conn);
             queryPrep(conn, input.nextInt());
         }
     }
