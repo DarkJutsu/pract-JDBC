@@ -11,23 +11,36 @@ public class Main {
         return p;
     }
 
+    private static Connection myConnection(Properties props) throws SQLException {
+        return DriverManager.getConnection("jdbc:postgresql://localhost:5432/TestJDBC", props);
+    }
+
+    private static void queryPrep(Connection conn, int yearMeno) {
+        String querySql = "SELECT * FROM alumno WHERE DATE_PART('year',fecha)<?";
+        try (PreparedStatement ps = conn.prepareStatement(querySql)) {
+            ps.setInt(1, yearMeno);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String nombre = rs.getString("nombre");
+                    String apellido = rs.getString("apellido");
+                    Date fechaN = rs.getDate("fecha");
+                    System.out.println(nombre + " " + apellido + ", Fecha de nacimiento: " + fechaN);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void main(String[] args) throws SQLException {
 /*      MOSTRAR LOS DRIVERS INSTALADOS
         for (Driver d : DriverManager.drivers().toList()) {
             System.out.println(d.toString());
         }
 */
-        Properties props = dataBaseProperties();
-        Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/TestJDBC", props);
-        try (Statement st = con.createStatement(); ResultSet rs = st.executeQuery("select * from alumno")) {
-            while (rs.next()) {
-                String nombre = rs.getString("nombre");
-                String apellido = rs.getString("apellido");
-                String fechaN = rs.getString("fecha");
-                System.out.println("Hola " + nombre + " " + apellido + " tu naciste " + fechaN);
-            }
+        try (Connection conn = myConnection(dataBaseProperties())) {
+            queryPrep(conn, 2010);
         }
-
 
     }
 }
