@@ -48,6 +48,21 @@ public class Main {
         }
     }
 
+    private static void queryPrepScrollUpdate(Connection conn) {
+        String querySql = "SELECT * FROM alumno";
+        try (PreparedStatement ps = conn.prepareStatement(querySql, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Filas.alumnos(rs);
+                    if (rs.getRow() == 3) rs.updateString("nombre", "Maria");
+                    rs.updateRow();
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private static void insertTo(Connection conn) throws SQLException {
         conn.setAutoCommit(false);
         Alumno[] alumnos = new Alumno[]{
@@ -85,7 +100,8 @@ public class Main {
         try (Connection conn = myConnection(dataBaseProperties())) {
 //            insertTo(conn);
 //            queryPrep(conn);
-            queryPrepScroll(conn);
+//            queryPrepScroll(conn);
+            queryPrepScrollUpdate(conn);
         }
     }
 }
