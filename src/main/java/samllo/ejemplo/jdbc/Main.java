@@ -1,8 +1,9 @@
 package samllo.ejemplo.jdbc;
 
+import utils.Filas;
+
 import java.sql.*;
 import java.util.Properties;
-import java.util.Scanner;
 
 public class Main {
     private static Properties dataBaseProperties() {
@@ -16,16 +17,30 @@ public class Main {
         return DriverManager.getConnection("jdbc:postgresql://localhost:5432/TestJDBC", props);
     }
 
-    private static void queryPrep(Connection conn, int yearMeno) {
-        String querySql = "SELECT * FROM alumno WHERE DATE_PART('year',fecha)<?";
+    private static void queryPrep(Connection conn) {
+        String querySql = "SELECT * FROM alumno WHERE DATE_PART('year',fecha) < ?";
         try (PreparedStatement ps = conn.prepareStatement(querySql)) {
-            ps.setInt(1, yearMeno);
+            ps.setInt(1, 2000);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    String nombre = rs.getString("nombre");
-                    String apellido = rs.getString("apellido");
-                    Date fechaN = rs.getDate("fecha");
-                    System.out.println(nombre + " " + apellido + ", Fecha de nacimiento: " + fechaN);
+                    Filas.alumnos(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static void queryPrepScroll(Connection conn) {
+        String querySql = "SELECT * FROM alumno";
+        try (PreparedStatement ps = conn.prepareStatement(querySql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.afterLast();
+                while (rs.previous()) {
+                    Filas.alumnos(rs);
+                }
+                while (rs.next()) {
+                    Filas.alumnos(rs);
                 }
             }
         } catch (SQLException e) {
@@ -67,11 +82,10 @@ public class Main {
             System.out.println(d.toString());
         }
 */
-        System.out.println("Nacidos antes que el año: ");
-        Scanner input = new Scanner(System.in);
         try (Connection conn = myConnection(dataBaseProperties())) {
-            insertTo(conn);
-            queryPrep(conn, input.nextInt());
+//            insertTo(conn);
+//            queryPrep(conn);
+            queryPrepScroll(conn);
         }
     }
 }
