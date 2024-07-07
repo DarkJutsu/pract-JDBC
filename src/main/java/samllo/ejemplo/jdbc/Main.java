@@ -33,12 +33,13 @@ public class Main {
         }
     }
 
-    private static void insertTo(Connection conn) {
+    private static void insertTo(Connection conn) throws SQLException {
+        conn.setAutoCommit(false);
         Alumno[] alumnos = new Alumno[]{
                 new Alumno("Angel", "Lopez", Date.valueOf("1991-02-12")),
                 new Alumno("Kevin", "Gomez", Date.valueOf("1991-02-12")),
                 new Alumno("Pedro", "Martines", Date.valueOf("1991-02-12")),
-                new Alumno("Jose", "Nolasco", Date.valueOf("1991-02-12")),
+                new Alumno("Jose", null, Date.valueOf("1991-02-12")),
         };
         String sql = "INSERT INTO alumno(nombre, apellido, fecha) values(?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -49,8 +50,10 @@ public class Main {
                 ps.setDate(3, alum.fechaN);
                 resCount = resCount + ps.executeUpdate();
             }
+            conn.commit();
             System.out.println("Número de filas actualizada/s: " + resCount);
         } catch (SQLException e) {
+            conn.rollback();
             throw new RuntimeException(e);
         }
     }
